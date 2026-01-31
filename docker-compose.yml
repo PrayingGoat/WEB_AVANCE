@@ -1,0 +1,133 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Base de données PostgreSQL
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: travaux-routiers-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-travaux_routiers}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - travaux-routiers-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # API d'authentification (Node.js + Express)
+  # ============================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: travaux-routiers-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${BACKEND_PORT:-3000}
+
+      # Database
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-travaux_routiers}
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+
+      # Firebase (optionnel, pour mode online)
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY:-}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL:-}
+
+      # Security
+      MAX_LOGIN_ATTEMPTS: ${MAX_LOGIN_ATTEMPTS:-3}
+      LOCK_TIME_HOURS: ${LOCK_TIME_HOURS:-24}
+
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - travaux-routiers-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: npm run dev
+
+  # ============================================
+  # Serveur de cartes offline (TileServer GL)
+  # ============================================
+  tile-server:
+    image: maptiler/tileserver-gl:latest
+    container_name: travaux-routiers-tiles
+    restart: unless-stopped
+    ports:
+      - "${TILE_SERVER_PORT:-8080}:8080"
+    volumes:
+      - ./docker/tile-server/data:/data
+      - ./docker/tile-server/config.json:/config/config.json:ro
+    networks:
+      - travaux-routiers-network
+    environment:
+      VERBOSE: "true"
+    command: --config /config/config.json
+
+  # ============================================
+  # Application Web React (développement)
+  # ============================================
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    container_name: travaux-routiers-web
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:3000}
+      REACT_APP_TILE_SERVER_URL: ${REACT_APP_TILE_SERVER_URL:-http://localhost:8080}
+      REACT_APP_FIREBASE_API_KEY: ${REACT_APP_FIREBASE_API_KEY:-}
+      REACT_APP_FIREBASE_AUTH_DOMAIN: ${REACT_APP_FIREBASE_AUTH_DOMAIN:-}
+      REACT_APP_FIREBASE_PROJECT_ID: ${REACT_APP_FIREBASE_PROJECT_ID:-}
+    ports:
+      - "${WEB_PORT:-3001}:3000"
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    networks:
+      - travaux-routiers-network
+    depends_on:
+      - backend
+      - tile-server
+    command: npm start
+    stdin_open: true
+    tty: true
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  travaux-routiers-network:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  postgres_data:
+    driver: local

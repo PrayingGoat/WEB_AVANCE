@@ -1,0 +1,27 @@
+{
+  "options": {
+    "paths": {
+      "root": "/data",
+      "fonts": "/fonts",
+      "sprites": "/sprites",
+      "styles": "/styles",
+      "mbtiles": "/data"
+    },
+    "serveAllFonts": true,
+    "serveAllStyles": true
+  },
+  "styles": {
+    "basic": {
+      "style": "basic/style.json",
+      "tilejson": {
+        "type": "overlay",
+        "bounds": [47.3, -19.1, 47.7, -18.7]
+      }
+    }
+  },
+  "data": {
+    "antananarivo": {
+      "mbtiles": "antananarivo.mbtiles"
+    }
+  }
+}
