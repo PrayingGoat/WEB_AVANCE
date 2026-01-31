@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+*.env
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker volumes
+docker/postgres/data/
+docker/tile-server/data/
+
+# Logs
+logs/
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# APK and build artifacts
+*.apk
+*.aab
+*.keystore
+
+# Mobile specific
+mobile/android/
+mobile/ios/
+mobile/.angular/
+mobile/.ionic/
+
+# React
+web/.eslintcache
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Documentation temporaire
+docs/*.tmp
