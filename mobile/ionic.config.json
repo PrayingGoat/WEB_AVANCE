@@ -1,0 +1,7 @@
+{
+  "name": "travaux-routiers-mobile",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}

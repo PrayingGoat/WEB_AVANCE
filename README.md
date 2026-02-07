@@ -47,23 +47,39 @@ Le système comprend :
 
 1. Cloner le repository
 ```bash
-git clone <url-du-repo>
-cd <nom-du-repo>
+git clone https://github.com/PrayingGoat/WEB_AVANCE.git
+cd WEB_AVANCE
 ```
 
-2. Copier les fichiers d'environnement
+2. Configuration de l'environnement
+Copiez les fichiers d'exemple pour créer vos fichiers de configuration locale :
 ```bash
+# Windows (Powershell)
+copy backend\.env.example backend\.env
+copy web\.env.example web\.env
+copy mobile\.env.example mobile\.env
+
+# Linux/Mac
 cp backend/.env.example backend/.env
 cp web/.env.example web/.env
 cp mobile/.env.example mobile/.env
 ```
 
-3. Configurer les variables Firebase dans les fichiers `.env`
+3. Base de données
+Le script complet d'initialisation de la base de données se trouve dans :
+`docker/postgres/init.sql`
+Il est automatiquement exécuté au premier lancement du conteneur Docker.
 
-4. Démarrer les services Docker
+4. Démarrer le projet (Docker)
+C'est la méthode recommandée pour tout lancer (Base de données, API, Web, Carte).
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
+
+L'application sera accessible sur :
+- **Web :** http://localhost:3001
+- **API :** http://localhost:3000
+- **Swagger (Doc API) :** http://localhost:3000/api-docs
 
 5. Installer les dépendances backend
 ```bash

@@ -15,6 +15,8 @@ const pool = new Pool({
   max: 20, // Nombre maximum de clients dans le pool
   idleTimeoutMillis: 30000, // Temps d'inactivité avant fermeture
   connectionTimeoutMillis: 2000, // Timeout de connexion
+  // Encodage UTF-8 pour les caractères spéciaux (é, è, à, etc.)
+  client_encoding: 'UTF8',
 });
 
 // Gestion des erreurs du pool

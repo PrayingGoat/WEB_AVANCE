@@ -18,9 +18,27 @@ const app = express();
 // Helmet pour sécuriser les headers HTTP
 app.use(helmet());
 
-// CORS
+// CORS - Autoriser plusieurs origines
+const allowedOrigins = [
+  'http://localhost:3001',  // React web app
+  'http://localhost:5173',  // Ionic mobile app (dev)
+  'http://localhost:8100',  // Ionic serve
+  'capacitor://localhost',  // Capacitor Android/iOS
+  'http://localhost',       // Generic localhost
+];
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: function (origin, callback) {
+    // Autoriser les requêtes sans origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // En dev, autoriser quand même
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -31,8 +49,14 @@ app.use(cors(corsOptions));
 // Middleware de parsing
 // ============================================
 
-app.use(express.json());
+app.use(express.json({ charset: 'utf-8' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware pour forcer UTF-8 dans les réponses JSON
+app.use((req, res, next) => {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  next();
+});
 
 // ============================================
 // Logging
@@ -90,7 +114,10 @@ app.get('/', (req, res) => {
 
 // Routes API
 const authRoutes = require('./routes/auth.routes');
+const signalementRoutes = require('./routes/signalement.routes');
+
 app.use('/api/auth', authRoutes);
+app.use('/api/signalements', signalementRoutes);
 
 // ============================================
 // Gestion des erreurs 404

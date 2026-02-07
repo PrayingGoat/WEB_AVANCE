@@ -1,7 +1,11 @@
 -- ============================================
 -- Script de création de la base de données
 -- Projet: Suivi des Travaux Routiers Antananarivo
+-- Encodage: UTF-8
 -- ============================================
+
+-- Forcer l'encodage UTF-8
+SET client_encoding = 'UTF8';
 
 -- Suppression des tables existantes (pour développement)
 DROP TABLE IF EXISTS session CASCADE;
@@ -155,7 +159,8 @@ INSERT INTO parametre_systeme (cle, valeur, description) VALUES
 
 -- Mot de passe: admin123 (hashé avec bcrypt, rounds=10)
 INSERT INTO utilisateur (email, password_hash, nom, prenom, role) VALUES
-    ('admin@travaux-routiers.mg', '$2b$10$N9qo8uLOickgx2ZMRZoMye7xKl0KEtJzXyQGy9JT9LVSFKFpZNXIa', 'Admin', 'Principal', 'MANAGER');
+    ('admin@travaux-routiers.mg', '$2b$10$N9qo8uLOickgx2ZMRZoMye7xKl0KEtJzXyQGy9JT9LVSFKFpZNXIa', 'Admin', 'Principal', 'MANAGER'),
+    ('admin@travaux.mg', '$2b$10$N9qo8uLOickgx2ZMRZoMye7xKl0KEtJzXyQGy9JT9LVSFKFpZNXIa', 'Admin', 'Système', 'MANAGER');
 
 -- ============================================
 -- Insertion d'entreprises de test
