@@ -1,4 +1,4 @@
-# Projet Cloud S5 - Suivi des Travaux Routiers Antananarivo
+# Projet Cloud S5 - Suivi des Travaux Routiers
 
 ### Description
 Application de gestion et suivi des travaux routiers sur la ville d'Antananarivo.
