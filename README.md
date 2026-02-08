@@ -1,5 +1,4 @@
 # Projet Cloud S5 - Suivi des Travaux Routiers Antananarivo
-## Promotion 17
 
 ### Description
 Application de gestion et suivi des travaux routiers sur la ville d'Antananarivo.
@@ -156,11 +155,4 @@ La documentation API Swagger est accessible sur `http://localhost:3000/api-docs`
 - Docker Compose fonctionnel
 - Documentation Swagger
 
-### License
 
-Projet académique - Promotion 17
-
----
-
-**V1:** 13 janvier 2026
-**V2:** 20 janvier 2026
