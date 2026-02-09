@@ -181,6 +181,40 @@ const login = async (email, password, ipAddress, userAgent) => {
       );
     }
 
+    // Synchroniser avec Firebase si disponible et si l'utilisateur n'a pas encore de firebase_uid
+    if (isFirebaseAvailable() && await checkInternetConnectivity()) {
+      // Récupérer le firebase_uid actuel
+      const uidResult = await client.query(
+        'SELECT firebase_uid FROM utilisateur WHERE id_utilisateur = $1',
+        [user.id_utilisateur]
+      );
+
+      if (!uidResult.rows[0]?.firebase_uid) {
+        try {
+          const auth = getAuth();
+          // Vérifier si l'utilisateur existe déjà dans Firebase
+          let firebaseUser;
+          try {
+            firebaseUser = await auth.getUserByEmail(email);
+          } catch (e) {
+            // L'utilisateur n'existe pas dans Firebase, le créer
+            firebaseUser = await auth.createUser({
+              email,
+              password,
+              displayName: `${user.prenom} ${user.nom}`,
+            });
+          }
+          // Sauvegarder le firebase_uid
+          await client.query(
+            'UPDATE utilisateur SET firebase_uid = $1 WHERE id_utilisateur = $2',
+            [firebaseUser.uid, user.id_utilisateur]
+          );
+        } catch (firebaseError) {
+          console.warn('Firebase sync during login failed:', firebaseError.message);
+        }
+      }
+    }
+
     // Créer le token JWT
     const tokenPayload = {
       id: user.id_utilisateur,

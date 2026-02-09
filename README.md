@@ -1,158 +1,121 @@
-# Projet Cloud S5 - Suivi des Travaux Routiers
+# Projet Cloud S5 - Suivi des Travaux Routiers Antananarivo
 
-### Description
-Application de gestion et suivi des travaux routiers sur la ville d'Antananarivo.
-Le système comprend :
-- Une API REST d'authentification avec basculement Firebase/PostgreSQL
-- Une application Web pour visiteurs et managers
-- Une application mobile pour signaler les problèmes routiers
-- Un serveur de cartes offline
+Application web et mobile pour suivre les travaux routiers a Antananarivo.
+Les citoyens signalent les problemes sur une carte, les managers gerent l'avancement des travaux.
 
-### Stack Technique
+## Ce que fait l'application
+
+- **Visiteurs** : voient la carte avec tous les signalements et leur statut
+- **Utilisateurs mobiles** : signalent les problemes routiers depuis leur telephone avec geolocalisation
+- **Managers** : gerent les signalements, changent les statuts, attribuent les entreprises et budgets
+
+## Technologies utilisees
 
 | Composant | Technologie |
 |-----------|-------------|
 | Backend API | Node.js + Express |
-| Base de données locale | PostgreSQL (Docker) |
-| Auth online | Firebase Authentication |
-| Frontend Web | React |
-| Mobile | Ionic Vue |
-| Cartes Web | Leaflet + Serveur offline |
-| Cartes Mobile | Leaflet + OpenStreetMap online |
-| Documentation API | Swagger/OpenAPI |
-| Conteneurisation | Docker + Docker Compose |
+| Base de donnees | PostgreSQL |
+| Auth cloud | Firebase Authentication |
+| Sync donnees | Firebase Firestore |
+| Frontend Web | React + Leaflet |
+| Mobile | Ionic Vue + Capacitor |
+| Documentation API | Swagger |
+| Conteneurisation | Docker Compose |
 
-### Structure du Projet
+## Structure du projet
 
 ```
-.
-├── backend/           # API d'authentification (Node.js + Express)
-├── web/              # Application Web (React)
-├── mobile/           # Application Mobile (Ionic Vue)
-├── docker/           # Configurations Docker
-│   ├── postgres/     # Configuration PostgreSQL
-│   └── tile-server/  # Serveur de cartes offline
-├── docs/             # Documentation technique
+├── backend/          # API REST (auth, signalements, sync Firebase)
+├── web/              # Application Web React (visiteurs + managers)
+├── mobile/           # Application Mobile Ionic Vue
+├── docker/           # Config Docker (PostgreSQL, tiles)
 └── docker-compose.yml
 ```
 
-### Prérequis
+## Installation
 
-- Docker & Docker Compose
-- Node.js 18+ et npm
-- Git
+### 1. Cloner le projet
 
-### Installation
-
-1. Cloner le repository
 ```bash
 git clone https://github.com/PrayingGoat/WEB_AVANCE.git
 cd WEB_AVANCE
 ```
 
-2. Configuration de l'environnement
-Copiez les fichiers d'exemple pour créer vos fichiers de configuration locale :
-```bash
-# Windows (Powershell)
-copy backend\.env.example backend\.env
-copy web\.env.example web\.env
-copy mobile\.env.example mobile\.env
+### 2. Configurer l'environnement
 
-# Linux/Mac
-cp backend/.env.example backend/.env
-cp web/.env.example web/.env
-cp mobile/.env.example mobile/.env
+```bash
+copy backend\.env.example backend\.env
 ```
 
-3. Base de données
-Le script complet d'initialisation de la base de données se trouve dans :
-`docker/postgres/init.sql`
-Il est automatiquement exécuté au premier lancement du conteneur Docker.
+Remplir les variables Firebase dans `backend/.env` si besoin (optionnel, l'app marche sans).
 
-4. Démarrer le projet (Docker)
-C'est la méthode recommandée pour tout lancer (Base de données, API, Web, Carte).
+### 3. Lancer avec Docker
+
 ```bash
 docker-compose up -d --build
 ```
 
-L'application sera accessible sur :
-- **Web :** http://localhost:3001
-- **API :** http://localhost:3000
-- **Swagger (Doc API) :** http://localhost:3000/api-docs
+### 4. Ou lancer manuellement
 
-5. Installer les dépendances backend
 ```bash
-cd backend
-npm install
-npm run dev
+# Backend
+cd backend && npm install && npm run dev
+
+# Web
+cd web && npm install && npm start
+
+# Mobile
+cd mobile && npm install && ionic serve
 ```
 
-6. Installer les dépendances web
-```bash
-cd web
-npm install
-npm start
-```
+### Acces
 
-7. Installer les dépendances mobile
-```bash
-cd mobile
-npm install
-ionic serve
-```
+| Service | URL |
+|---------|-----|
+| Application Web | http://localhost:3001 |
+| API Backend | http://localhost:3000 |
+| Documentation Swagger | http://localhost:3000/api-docs |
 
-### Fonctionnalités
+### Compte manager par defaut
 
-#### Module Authentification (API REST)
-- Authentification email/password
-- Inscription
-- Modification des informations utilisateur
-- Gestion des sessions avec durée de vie
-- Limitation des tentatives de connexion (3 par défaut)
-- Déblocage d'utilisateurs via API
-- Basculement automatique Firebase ↔ PostgreSQL selon connexion Internet
-- Documentation Swagger
+- Email : `admin@travaux-routiers.mg`
+- Mot de passe : `admin123`
 
-#### Module Web
-**Visiteurs (sans compte)**
-- Visualisation de la carte avec les signalements
-- Informations détaillées au survol (date, statut, surface, budget, entreprise)
-- Tableau récapitulatif (nombre de points, surface totale, avancement %, budget total)
+## Fonctionnalites
 
-**Managers (avec compte)**
-- Création de comptes utilisateurs
-- Synchronisation bidirectionnelle avec Firebase
-- Déblocage des utilisateurs bloqués
-- Gestion des signalements (surface, budget, entreprise, statut)
-- Modification des statuts (nouveau → en cours → terminé)
+### API REST
 
-#### Module Mobile
-- Authentification via Firebase (inscription par Manager uniquement)
-- Signalement de problèmes routiers avec géolocalisation
-- Visualisation de la carte et des signalements
-- Filtre "Mes signalements uniquement"
-- Tableau récapitulatif
+- Inscription et connexion avec JWT
+- Limitation des tentatives de connexion (3 max, puis blocage)
+- Deblocage des comptes par le manager
+- CRUD complet des signalements
+- Statistiques (total, en cours, termines, avancement %)
+- Synchronisation Firebase (auth + Firestore)
+- Documentation Swagger complete
 
-### Équipe
+### Application Web
 
-| Nom | Prénom | NumETU | Rôle |
-|-----|--------|--------|------|
-|     |        |        |      |
-|     |        |        |      |
-|     |        |        |      |
-|     |        |        |      |
+- Carte interactive centree sur Antananarivo avec marqueurs colores par statut
+- Infobulles au survol (statut, budget, entreprise)
+- Popup au clic avec details complets
+- Tableau recapitulatif des signalements
+- Filtrage par statut
+- Dashboard manager avec statistiques
+- Gestion des signalements (modifier statut, budget, entreprise)
+- Gestion des utilisateurs (creer, bloquer, debloquer)
+- Page de synchronisation Firebase
 
-### Documentation
+### Application Mobile
 
-La documentation technique complète est disponible dans le dossier `docs/`.
-La documentation API Swagger est accessible sur `http://localhost:3000/api-docs` quand le backend est lancé.
+- Connexion utilisateur ou mode visiteur
+- Carte avec geolocalisation
+- Creation de signalement avec position sur la carte
+- Liste des signalements avec filtre "mes signalements"
+- Interface Ionic avec navigation par onglets
 
-### Livrables
+### Firebase
 
-- Code source sur GitHub/GitLab (public)
-- Documentation technique (PDF)
-- APK signé pour mobile
-- Docker Compose fonctionnel
-- Documentation Swagger
-
-
+- Firebase Authentication pour la sync des comptes utilisateurs
+- Firestore pour la sync des signalements (necessite plan Blaze)
+- Basculement automatique PostgreSQL si Firebase indisponible
+- Bouton de synchronisation manuelle dans le dashboard manager

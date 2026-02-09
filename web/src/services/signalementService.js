@@ -92,3 +92,19 @@ export const createUser = async (userData) => {
   const response = await api.post('/api/auth/register', userData);
   return response.data.data;
 };
+
+/**
+ * Synchronisation Firebase - lancer la sync complète
+ */
+export const syncFirebase = async () => {
+  const response = await api.post('/api/sync');
+  return response.data;
+};
+
+/**
+ * Vérifier le statut Firebase
+ */
+export const getFirebaseStatus = async () => {
+  const response = await api.get('/api/sync/status');
+  return response.data.data;
+};

@@ -3,6 +3,7 @@
  */
 
 const { query, getClient } = require('../config/database');
+const { syncSingleSignalement, deleteSingleSignalement } = require('./firebaseSyncService');
 
 /**
  * Récupérer les statistiques globales
@@ -155,7 +156,7 @@ const createSignalement = async (data) => {
   );
 
   const row = result.rows[0];
-  return {
+  const created = {
     id: row.id_signalement,
     latitude: parseFloat(row.latitude),
     longitude: parseFloat(row.longitude),
@@ -165,6 +166,16 @@ const createSignalement = async (data) => {
     surfaceM2: row.surface_m2 ? parseFloat(row.surface_m2) : null,
     dateSignalement: row.date_signalement,
   };
+
+  // Sync vers Firestore (non-bloquant)
+  syncSingleSignalement(created).then(firebaseId => {
+    if (firebaseId) {
+      query('UPDATE signalement SET firebase_id = $1 WHERE id_signalement = $2', [firebaseId, created.id])
+        .catch(err => console.warn('Erreur mise à jour firebase_id:', err.message));
+    }
+  }).catch(() => {});
+
+  return created;
 };
 
 /**
@@ -233,7 +244,7 @@ const updateSignalement = async (id, data) => {
   }
 
   const row = result.rows[0];
-  return {
+  const updated = {
     id: row.id_signalement,
     latitude: parseFloat(row.latitude),
     longitude: parseFloat(row.longitude),
@@ -244,12 +255,23 @@ const updateSignalement = async (id, data) => {
     budget: row.budget ? parseFloat(row.budget) : null,
     dateModification: row.date_modification,
   };
+
+  // Sync vers Firestore (non-bloquant)
+  syncSingleSignalement(updated).catch(() => {});
+
+  return updated;
 };
 
 /**
  * Supprimer un signalement
  */
 const deleteSignalement = async (id) => {
+  // Récupérer le firebase_id avant suppression
+  const existing = await query(
+    'SELECT firebase_id FROM signalement WHERE id_signalement = $1',
+    [id]
+  );
+
   const result = await query(
     'DELETE FROM signalement WHERE id_signalement = $1 RETURNING id_signalement',
     [id]
@@ -258,6 +280,10 @@ const deleteSignalement = async (id) => {
   if (result.rows.length === 0) {
     throw new Error('Signalement non trouvé');
   }
+
+  // Supprimer de Firestore (non-bloquant)
+  const firebaseId = existing.rows[0]?.firebase_id;
+  deleteSingleSignalement(id, firebaseId).catch(() => {});
 
   return { id: result.rows[0].id_signalement };
 };

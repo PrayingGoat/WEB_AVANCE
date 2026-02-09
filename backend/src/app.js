@@ -115,9 +115,11 @@ app.get('/', (req, res) => {
 // Routes API
 const authRoutes = require('./routes/auth.routes');
 const signalementRoutes = require('./routes/signalement.routes');
+const syncRoutes = require('./routes/sync.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/signalements', signalementRoutes);
+app.use('/api/sync', syncRoutes);
 
 // ============================================
 // Gestion des erreurs 404

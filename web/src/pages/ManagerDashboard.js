@@ -588,17 +588,41 @@ function SyncPage() {
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
+  const [firebaseStatus, setFirebaseStatus] = useState(null);
+  const [syncResults, setSyncResults] = useState(null);
+
+  // Vérifier le statut Firebase au chargement
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const status = await signalementService.getFirebaseStatus();
+        setFirebaseStatus(status);
+      } catch (err) {
+        setFirebaseStatus({ configured: false, online: false, message: 'Impossible de vérifier le statut Firebase' });
+      }
+    };
+    checkStatus();
+  }, []);
 
   const handleSync = async () => {
     setSyncing(true);
     setMessage('');
+    setSyncResults(null);
 
-    // Simuler la synchronisation (à implémenter avec Firebase)
-    setTimeout(() => {
+    try {
+      const result = await signalementService.syncFirebase();
       setLastSync(new Date());
-      setMessage('Synchronisation terminée avec succès');
+      setMessage(result.message || 'Synchronisation terminee avec succes');
+      setMessageType('success');
+      setSyncResults(result.data);
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || 'Erreur lors de la synchronisation';
+      setMessage(errorMsg);
+      setMessageType('error');
+    } finally {
       setSyncing(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -607,32 +631,60 @@ function SyncPage() {
 
       <div className="sync-card">
         <p>
-          Cette fonctionnalité permet de synchroniser les données locales (PostgreSQL)
-          avec Firebase pour assurer la cohérence des données entre les modes online et offline.
+          Cette fonctionnalite permet de synchroniser les donnees locales (PostgreSQL)
+          avec Firebase/Firestore pour assurer la coherence des donnees entre les modes online et offline.
         </p>
+
+        {/* Statut Firebase */}
+        {firebaseStatus && (
+          <div className={`sync-status-badge ${firebaseStatus.configured && firebaseStatus.online ? 'online' : 'offline'}`}>
+            <strong>Statut Firebase :</strong> {firebaseStatus.message}
+          </div>
+        )}
 
         <div className="sync-status">
           {lastSync && (
             <p>
-              <strong>Dernière synchronisation :</strong>{' '}
+              <strong>Derniere synchronisation :</strong>{' '}
               {lastSync.toLocaleString('fr-FR')}
             </p>
           )}
         </div>
 
         {message && (
-          <div className={`sync-message ${message.includes('succès') ? 'success' : 'error'}`}>
+          <div className={`sync-message ${messageType}`}>
             {message}
+          </div>
+        )}
+
+        {/* Resultats de la synchronisation */}
+        {syncResults && (
+          <div className="sync-results">
+            <h3>Details de la synchronisation</h3>
+            <ul>
+              <li>Signalements synchronises : {syncResults.signalements?.syncCount || 0}</li>
+              <li>Utilisateurs synchronises : {syncResults.utilisateurs?.syncCount || 0}</li>
+              {syncResults.stats && (
+                <li>Statistiques mises a jour</li>
+              )}
+            </ul>
           </div>
         )}
 
         <button
           className="btn btn-primary btn-lg"
           onClick={handleSync}
-          disabled={syncing}
+          disabled={syncing || (firebaseStatus && !firebaseStatus.configured)}
         >
           {syncing ? 'Synchronisation en cours...' : 'Synchroniser maintenant'}
         </button>
+
+        {firebaseStatus && !firebaseStatus.configured && (
+          <p className="sync-warning">
+            Firebase n'est pas configure. Ajoutez les credentials Firebase dans le fichier .env du backend
+            (FIREBASE_PROJECT_ID, FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL).
+          </p>
+        )}
       </div>
     </div>
   );
